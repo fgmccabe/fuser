@@ -1,0 +1,9 @@
+{
+  "content": {
+    "it.fuser": "fuser.star",
+    "it.twizzle": "twizzle.star",
+    "it.count" : "uni_count.star"
+  },
+  "version": "1.0.0",
+  "default": "/Users/fgm/Projects/star/src/Star/catalog"
+}
