@@ -1,5 +1,7 @@
 {
   "content": {
+    "it.scan": "scan.star",
+    "it.expr": "expr.star",
     "it.fuser": "fuser.star",
     "it.twizzle": "twizzle.star",
     "it.count" : "uni_count.star"

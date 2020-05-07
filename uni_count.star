@@ -17,7 +17,9 @@ it.count{
 	    getLocl("tgt"),
 	    .owned_access,
 	    .from_string,
-	    call("countCodesImpl",1),
+	    getLocl("str"),
+	    .string_size,
+	    call("countCodesImpl",2),
 	    .S32FromI32])])).
 
   countImport = fun("countCodes_",[("ptr",.i32),("len",.i32)],[.i32],[],
@@ -30,7 +32,6 @@ it.count{
   main:()=>action[(),()].
   main()=>do{
     show countExport;
-
     show countImport;
 
     Prog .= ["countCodes"->countExport,"countCodes_"->countImport];
