@@ -12,27 +12,27 @@ it.scan{
     scan(Cs,[letExp(Nm,Tp,El,Exp),..Stk]).
   scan([getLocl(Nm),..Cs],Stk) => scan(Cs,[single(getLocl(Nm)),..Stk]).
   scan([call(Nm,Ar),..Cs],Stk) where (Top,Stk1) ^= pop(Stk,Ar) =>
-    scan(Cs,[expr(call(Nm,Ar),Top),..Stk1]).
+    scan(Cs,[expr([single(call(Nm,Ar)),..Top]),..Stk1]).
   scan([.I32FromS32,..Cs],[Top,..Stk]) =>
-    scan(Cs,[expr(.I32FromS32,[Top]),..Stk]).
+    scan(Cs,[expr([single(.I32FromS32),Top]),..Stk]).
   scan([.I32FromS32,..Cs],[Top,..Stk]) =>
-    scan(Cs,[expr(.I32FromS32,[Top]),..Stk]).
+    scan(Cs,[expr([single(.I32FromS32),Top]),..Stk]).
   scan([.S32FromI32,..Cs],[Top,..Stk]) =>
-    scan(Cs,[expr(.S32FromI32,[Top]),..Stk]).
+    scan(Cs,[expr([single(.S32FromI32),Top]),..Stk]).
   scan([block(In),..Is],Stk) =>
     scan(Is,scan(In,Stk)).
-  scan([own(Tps,Ins),..Is],Stk) where (Els,_) ^= pop(Stk,size(Tps)) =>
-    scan(Is,[expr(own(Tps,Ins),Els),..Stk]).
+  scan([own(Nm,Tp,Ins),..Is],[O,..Stk]) =>
+    scan(Is,[expr([single(own(Nm,Tp,Ins)),O]),..Stk]).
   scan([.owned_access,..Cs],[Top,..Stk]) =>
-    scan(Cs,[expr(.owned_access,[Top]),..Stk]).
+    scan(Cs,[expr([single(.owned_access),Top]),..Stk]).
   scan([.owned_release,..Cs],[Top,..Stk]) =>
-    scan(Cs,[expr(.owned_release,[Top]),..Stk]).
+    scan(Cs,[expr([single(.owned_release),Top]),..Stk]).
   scan([.string_size,..Cs],[Top,..Stk]) =>
-    scan(Cs,[expr(.string_size,[Top]),..Stk]).
+    scan(Cs,[expr([single(.string_size),Top]),..Stk]).
   scan([.string_from,..Cs],[Len,Base,..Stk]) =>
-    scan(Cs,[expr(.string_from,[Base,Len]),..Stk]).
+    scan(Cs,[expr([single(.string_from),Base,Len]),..Stk]).
   scan([.from_string,..Cs],[Tgt,Src,..Stk]) =>
-    scan(Cs,[expr(.from_string,[Tgt,Src]),..Stk]).
+    scan(Cs,[expr([single(.from_string),Src,Tgt]),..Stk]).
   scan([In,..Ins],Stk) => scan(Ins,[single(In),..Stk]).
 
   pop(Stk,Ar) => let{
@@ -42,15 +42,22 @@ it.scan{
     pp([E,..Ss],So,Cx) => pp(Ss,[E,..So],Cx-1).
   } in pp(Stk,[],Ar).
 
-
   public implementation coercion[ins,expr] => {.
     _coerce(I) => foldIns([I])
+  .}
+
+  public implementation coercion[expr,cons[ins]] => {.
+    _coerce(E) => case (E::ins) in {
+      block(Ins) => Ins.
+      In => [In]
+    }
   .}
 
   public implementation coercion[expr,ins] => let{
     flattn:(expr)=>cons[ins].
     flattn(single(I))=>[I].
-    flattn(expr(I,As)) => multicat(As//flattn)++[I].
+    flattn(expr([])) => [].
+    flattn(expr([A,..As])) => multicat(As//flattn)++flattn(A).
     flattn(letExp(Nm,Tp,Vl,B)) => flattn(Vl)++[letLocal(Nm,Tp,flattn(B))].
   } in {.
     _coerce(E) => case flattn(E) in {
